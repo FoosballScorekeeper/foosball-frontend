@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {ref} from "vue";
+import {onMounted, onUnmounted, ref} from "vue";
 
 const teamA = ref({
   name: 'Team Alpha',
@@ -15,9 +15,24 @@ const teamB = ref({
 })
 
 import TeamPanel from "@/components/TeamPanel.vue";
+import TimerPanel from "@/components/TimerPanel.vue";
+
+const secondsElapsed = ref(0)
+let timer: number
+
+onMounted(() => {
+  timer = setInterval(() => {
+    secondsElapsed.value++
+  }, 1000)
+})
+
+onUnmounted(() => {
+  clearInterval(timer)
+})
 </script>
 
 <template>
+  <TimerPanel :seconds="secondsElapsed" />
 <TeamPanel
     :team-name="teamA.name"
     :players="teamA.players"
