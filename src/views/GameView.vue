@@ -4,14 +4,19 @@ import {onMounted, onUnmounted, ref} from "vue";
 import TeamPanel from "@/components/TeamPanel.vue";
 import TimerPanel from "@/components/TimerPanel.vue";
 import GameOverOverlay from "@/components/GameOverOverlay.vue";
+import type {GameDto} from "@/models/GameDto.ts";
+import {createGame} from "@/services/GameService.ts";
+import type {GameFinished} from "@/models/GameFinished.ts";
 
 const teamA = ref({
+  id: 1,
   name: 'Team Alpha',
   players: ['Alice', 'Bob'],
   score: 0,
 })
 
 const teamB = ref({
+  id: 2,
   name: 'Team Beta',
   players: ['Charlie', 'Dana'],
   score: 0,
@@ -51,8 +56,19 @@ function fixScore() {
   isGameOver.value = false
 }
 
-function completeGame() {
+const game = ref<GameFinished>({
+  teamAId: teamA.value.id,
+  teamAName: teamA.value.name,
+  scoreA: teamA.value.score,
+  teamBId: teamB.value.id,
+  teamBName: teamB.value.name,
+  scoreB: teamB.value.score,
+  winnerId: teamA.value.id,
+})
+
+async function completeGame() {
   gameCompleted.value = true
+  const createdGame: GameDto = await createGame(game.value)
 }
 
 function switchSides() {
@@ -86,7 +102,6 @@ onUnmounted(() => {
       @increment="incrementScore('B')"
       @decrement="decrementScore('B')"
   />
-
   <GameOverOverlay
       v-if="isGameOver && !gameCompleted"
       :winner="winningTeam"
