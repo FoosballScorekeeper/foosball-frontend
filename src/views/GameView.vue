@@ -1,6 +1,9 @@
 <script setup lang="ts">
 
 import {onMounted, onUnmounted, ref} from "vue";
+import TeamPanel from "@/components/TeamPanel.vue";
+import TimerPanel from "@/components/TimerPanel.vue";
+import GameOverOverlay from "@/components/GameOverOverlay.vue";
 
 const teamA = ref({
   name: 'Team Alpha',
@@ -14,11 +17,47 @@ const teamB = ref({
   score: 0,
 })
 
-import TeamPanel from "@/components/TeamPanel.vue";
-import TimerPanel from "@/components/TimerPanel.vue";
-
 const secondsElapsed = ref(0)
 let timer: number
+
+const isGameOver = ref(false)
+const gameCompleted = ref(false)
+const winningTeam = ref('')
+
+function incrementScore(team: 'A' | 'B') {
+  if (isGameOver.value) return
+  const teamRef = team === 'A' ? teamA : teamB
+  teamRef.value.score++
+  checkWinner()
+}
+
+function decrementScore(team: 'A' | 'B') {
+  const teamRef = team === 'A' ? teamA : teamB
+  teamRef.value.score = Math.max(0, teamRef.value.score - 1)
+}
+
+function checkWinner() {
+  if (teamA.value.score >= 5) {
+    winningTeam.value = teamA.value.name
+    isGameOver.value = true
+  }
+  if (teamB.value.score >= 5) {
+    winningTeam.value = teamB.value.name
+    isGameOver.value = true
+  }
+}
+
+function fixScore() {
+  isGameOver.value = false
+}
+
+function completeGame() {
+  gameCompleted.value = true
+}
+
+function switchSides() {
+
+}
 
 onMounted(() => {
   timer = setInterval(() => {
@@ -33,20 +72,28 @@ onUnmounted(() => {
 
 <template>
   <TimerPanel :seconds="secondsElapsed" />
-<TeamPanel
-    :team-name="teamA.name"
-    :players="teamA.players"
-    :score="teamA.score"
-    @increment="teamA.score++"
-    @decrement="teamA.score = Math.max(0, teamA.score - 1)"
-/>
-<TeamPanel
-    :team-name="teamB.name"
-    :players="teamB.players"
-    :score="teamB.score"
-    @increment="teamB.score++"
-    @decrement="teamB.score = Math.max(0, teamB.score - 1)"
-/>
+  <TeamPanel
+      :team-name="teamA.name"
+      :players="teamA.players"
+      :score="teamA.score"
+      @increment="incrementScore('A')"
+      @decrement="decrementScore('A')"
+  />
+  <TeamPanel
+      :team-name="teamB.name"
+      :players="teamB.players"
+      :score="teamB.score"
+      @increment="incrementScore('B')"
+      @decrement="decrementScore('B')"
+  />
+
+  <GameOverOverlay
+      v-if="isGameOver && !gameCompleted"
+      :winner="winningTeam"
+      @fix-score="fixScore"
+      @switch-sides="switchSides"
+      @complete-game="completeGame"
+  />
 </template>
 
 <style scoped>
